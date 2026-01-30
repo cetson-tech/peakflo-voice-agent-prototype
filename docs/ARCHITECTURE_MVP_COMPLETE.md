@@ -1,6 +1,7 @@
 # Voice Agent Architecture Document - MVP Complete Version
 
 ## Table of Contents
+
 1. [Overview](#overview)
 2. [MVP Scope](#mvp-scope)
 3. [System Architecture](#system-architecture)
@@ -17,25 +18,28 @@
 
 ## Overview
 
-### Purpose
+### Purpose.
+
 This document describes the **complete MVP** architecture for a Voice Agent system that works **end-to-end**. Every component, connection, and implementation detail is included to ensure a working system.
 
-### MVP Goals
-- ✅ **Functional**: Complete voice conversation flow works end-to-end
-- ✅ **Complete**: All necessary components and connections included
-- ✅ **Testable**: Can be tested end-to-end immediately
-- ✅ **Deployable**: Ready for deployment with all configurations
+### MVP Goals.
 
-### Key Capabilities (MVP)
-- ✅ Speech-to-Text (STT) using OpenAI Whisper API
-- ✅ Text-to-Speech (TTS) using OpenAI TTS API
-- ✅ Natural language understanding using OpenAI GPT-3.5-turbo
-- ✅ Conversation management with context
-- ✅ Authentication (API keys)
-- ✅ Session management
-- ✅ Error handling
-- ✅ File upload handling
-- ✅ Database persistence
+- ✅ **Functional**: Complete voice conversation flow works end-to-end.
+- ✅ **Complete**: All necessary components and connections included.
+- ✅ **Testable**: Can be tested end-to-end immediately.
+- ✅ **Deployable**: Ready for deployment with all configurations.
+
+### Key Capabilities (MVP).
+
+- ✅ Speech-to-Text (STT) using OpenAI Whisper API.
+- ✅ Text-to-Speech (TTS) using OpenAI TTS API.
+- ✅ Natural language understanding using OpenAI GPT-3.5-turbo.
+- ✅ Conversation management with context.
+- ✅ Authentication (API keys).
+- ✅ Session management.
+- ✅ Error handling.
+- ✅ File upload handling.
+- ✅ Database persistence.
 
 ---
 
@@ -44,17 +48,19 @@ This document describes the **complete MVP** architecture for a Voice Agent syst
 ### What MVP Includes (Complete List)
 
 **Core Functionality:**
-1. ✅ User sends audio → System transcribes → System understands → System responds → System speaks
-2. ✅ Conversation context maintained (last 10-20 messages)
-3. ✅ Session management (create, get, update, cleanup)
-4. ✅ Authentication (API key validation)
-5. ✅ File upload handling (multipart/form-data)
-6. ✅ Audio format validation and conversion
-7. ✅ Error handling with retries
-8. ✅ Database persistence
+
+1. ✅ User sends audio → System transcribes → System understands → System responds → System speaks.
+2. ✅ Conversation context maintained (last 10-20 messages).
+3. ✅ Session management (create, get, update, cleanup).
+4. ✅ Authentication (API key validation).
+5. ✅ File upload handling (multipart/form-data).
+6. ✅ Audio format validation and conversion.
+7. ✅ Error handling with retries.
+8. ✅ Database persistence.
 
 **Infrastructure:**
-1. ✅ REST API with all endpoints
+
+1. ✅ REST API with all endpoints.
 2. ✅ PostgreSQL database with complete schema
 3. ✅ Database connection pooling
 4. ✅ File upload middleware
@@ -64,6 +70,7 @@ This document describes the **complete MVP** architecture for a Voice Agent syst
 8. ✅ Logging
 
 **API Endpoints:**
+
 1. ✅ Health check
 2. ✅ Authentication (login with API key)
 3. ✅ Session management (create, get)
@@ -148,26 +155,28 @@ This document describes the **complete MVP** architecture for a Voice Agent syst
 **Technology**: OpenAI Whisper API
 
 **Complete Implementation**:
+
 ```javascript
-const { OpenAI } = require('openai');
-const fs = require('fs');
+const { OpenAI } = require("openai");
+const fs = require("fs");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function transcribeAudio(audioFile) {
   try {
     // Handle both file path and buffer
-    const file = typeof audioFile === 'string' 
-      ? fs.createReadStream(audioFile)
-      : audioFile;
-    
+    const file =
+      typeof audioFile === "string"
+        ? fs.createReadStream(audioFile)
+        : audioFile;
+
     const transcript = await openai.audio.transcriptions.create({
       file: file,
       model: "whisper-1",
       language: null, // Auto-detect
-      response_format: "json"
+      response_format: "json",
     });
-    
+
     return transcript.text;
   } catch (error) {
     throw new Error(`STT Error: ${error.message}`);
@@ -176,6 +185,7 @@ async function transcribeAudio(audioFile) {
 ```
 
 **Error Handling**:
+
 - Network errors → Retry (max 2 times)
 - Invalid format → Return 400
 - API errors → Return 500 with message
@@ -187,20 +197,21 @@ async function transcribeAudio(audioFile) {
 **Technology**: OpenAI TTS API
 
 **Complete Implementation**:
+
 ```javascript
 async function synthesizeSpeech(text) {
   try {
     // Validate text length
     if (text.length > 4096) {
-      throw new Error('Text exceeds 4096 character limit');
+      throw new Error("Text exceeds 4096 character limit");
     }
-    
+
     const response = await openai.audio.speech.create({
       model: "tts-1",
       voice: "alloy",
-      input: text
+      input: text,
     });
-    
+
     // Convert to buffer
     const buffer = Buffer.from(await response.arrayBuffer());
     return buffer;
@@ -217,30 +228,32 @@ async function synthesizeSpeech(text) {
 **Technology**: OpenAI GPT-3.5-turbo
 
 **Complete Implementation**:
+
 ```javascript
 async function generateResponse(userText, conversationHistory) {
   try {
     const messages = [
-      { 
-        role: 'system', 
-        content: 'You are a helpful voice assistant. Keep responses concise and natural for voice conversation.' 
-      }
+      {
+        role: "system",
+        content:
+          "You are a helpful voice assistant. Keep responses concise and natural for voice conversation.",
+      },
     ];
-    
+
     // Add conversation history (last 10 messages)
     const recentHistory = conversationHistory.slice(-10);
     messages.push(...recentHistory);
-    
+
     // Add current user message
-    messages.push({ role: 'user', content: userText });
-    
+    messages.push({ role: "user", content: userText });
+
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: messages,
       max_tokens: 500,
-      temperature: 0.7
+      temperature: 0.7,
     });
-    
+
     return response.choices[0].message.content;
   } catch (error) {
     throw new Error(`LLM Error: ${error.message}`);
@@ -253,22 +266,23 @@ async function generateResponse(userText, conversationHistory) {
 ### 4. Conversation Manager
 
 **Complete Implementation**:
+
 ```javascript
-const { Pool } = require('pg');
+const { Pool } = require("pg");
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 async function createSession(userId) {
   const result = await pool.query(
-    'INSERT INTO sessions (user_id) VALUES ($1) RETURNING id',
-    [userId]
+    "INSERT INTO sessions (user_id) VALUES ($1) RETURNING id",
+    [userId],
   );
   return result.rows[0].id;
 }
 
 async function getSession(sessionId, userId) {
   const result = await pool.query(
-    'SELECT * FROM sessions WHERE id = $1 AND user_id = $2',
-    [sessionId, userId]
+    "SELECT * FROM sessions WHERE id = $1 AND user_id = $2",
+    [sessionId, userId],
   );
   return result.rows[0] || null;
 }
@@ -279,8 +293,8 @@ async function getOrCreateSession(userId, sessionId = null) {
     if (session) {
       // Update last activity
       await pool.query(
-        'UPDATE sessions SET last_activity_at = NOW() WHERE id = $1',
-        [sessionId]
+        "UPDATE sessions SET last_activity_at = NOW() WHERE id = $1",
+        [sessionId],
       );
       return sessionId;
     }
@@ -295,19 +309,19 @@ async function getConversationHistory(sessionId, limit = 20) {
      WHERE session_id = $1 
      ORDER BY created_at ASC 
      LIMIT $2`,
-    [sessionId, limit]
+    [sessionId, limit],
   );
-  
-  return result.rows.map(row => ({
+
+  return result.rows.map((row) => ({
     role: row.role,
-    content: row.content
+    content: row.content,
   }));
 }
 
 async function saveMessage(sessionId, role, content) {
   await pool.query(
-    'INSERT INTO messages (session_id, role, content) VALUES ($1, $2, $3)',
-    [sessionId, role, content]
+    "INSERT INTO messages (session_id, role, content) VALUES ($1, $2, $3)",
+    [sessionId, role, content],
   );
 }
 ```
@@ -319,36 +333,37 @@ async function saveMessage(sessionId, role, content) {
 ### 5. Authentication Module (Complete)
 
 **Complete Implementation**:
+
 ```javascript
-const crypto = require('crypto');
-const { Pool } = require('pg');
+const crypto = require("crypto");
+const { Pool } = require("pg");
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 // Hash API key
 function hashApiKey(apiKey) {
-  return crypto.createHash('sha256').update(apiKey).digest('hex');
+  return crypto.createHash("sha256").update(apiKey).digest("hex");
 }
 
 // Generate API key
 function generateApiKey() {
-  return 'sk_' + crypto.randomBytes(32).toString('hex');
+  return "sk_" + crypto.randomBytes(32).toString("hex");
 }
 
 // Validate API key
 async function validateApiKey(apiKey) {
   const hashedKey = hashApiKey(apiKey);
   const result = await pool.query(
-    'SELECT id, email FROM users WHERE api_key_hash = $1',
-    [hashedKey]
+    "SELECT id, email FROM users WHERE api_key_hash = $1",
+    [hashedKey],
   );
-  
+
   if (result.rows.length === 0) {
     return null;
   }
-  
+
   return {
     id: result.rows[0].id,
-    email: result.rows[0].email
+    email: result.rows[0].email,
   };
 }
 
@@ -356,15 +371,15 @@ async function validateApiKey(apiKey) {
 async function createUser(email) {
   const apiKey = generateApiKey();
   const hashedKey = hashApiKey(apiKey);
-  
+
   const result = await pool.query(
-    'INSERT INTO users (email, api_key_hash) VALUES ($1, $2) RETURNING id',
-    [email, hashedKey]
+    "INSERT INTO users (email, api_key_hash) VALUES ($1, $2) RETURNING id",
+    [email, hashedKey],
   );
-  
+
   return {
     userId: result.rows[0].id,
-    apiKey: apiKey // Return plain key only once
+    apiKey: apiKey, // Return plain key only once
   };
 }
 
@@ -372,22 +387,24 @@ async function createUser(email) {
 async function authenticate(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Missing or invalid authorization header' });
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Missing or invalid authorization header" });
     }
-    
+
     const apiKey = authHeader.substring(7);
     const user = await validateApiKey(apiKey);
-    
+
     if (!user) {
-      return res.status(401).json({ error: 'Invalid API key' });
+      return res.status(401).json({ error: "Invalid API key" });
     }
-    
+
     req.user = user;
     next();
   } catch (error) {
-    res.status(500).json({ error: 'Authentication error' });
+    res.status(500).json({ error: "Authentication error" });
   }
 }
 ```
@@ -397,35 +414,36 @@ async function authenticate(req, res, next) {
 ### 6. Audio Preprocessing Module (Complete)
 
 **Complete Implementation**:
+
 ```javascript
-const multer = require('multer');
-const fs = require('fs');
-const { exec } = require('child_process');
-const util = require('util');
+const multer = require("multer");
+const fs = require("fs");
+const { exec } = require("child_process");
+const util = require("util");
 const execPromise = util.promisify(exec);
 
 // Configure multer for file uploads
 const upload = multer({
-  dest: 'uploads/',
+  dest: "uploads/",
   limits: {
     fileSize: 25 * 1024 * 1024, // 25MB max
   },
   fileFilter: (req, file, cb) => {
     const allowedMimes = [
-      'audio/wav',
-      'audio/mpeg',
-      'audio/mp3',
-      'audio/webm',
-      'audio/ogg',
-      'audio/flac'
+      "audio/wav",
+      "audio/mpeg",
+      "audio/mp3",
+      "audio/webm",
+      "audio/ogg",
+      "audio/flac",
     ];
-    
+
     if (allowedMimes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid audio format'));
+      cb(new Error("Invalid audio format"));
     }
-  }
+  },
 });
 
 // Validate audio file
@@ -433,53 +451,54 @@ async function validateAudio(filePath) {
   try {
     // Check file exists
     if (!fs.existsSync(filePath)) {
-      throw new Error('Audio file not found');
+      throw new Error("Audio file not found");
     }
-    
+
     // Check file size
     const stats = fs.statSync(filePath);
     if (stats.size > 25 * 1024 * 1024) {
-      throw new Error('Audio file too large (max 25MB)');
+      throw new Error("Audio file too large (max 25MB)");
     }
-    
+
     // Get audio info using FFmpeg
     const { stdout } = await execPromise(
-      `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`
+      `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`,
     );
-    
+
     const duration = parseFloat(stdout.trim());
-    if (duration > 300) { // 5 minutes max
-      throw new Error('Audio duration too long (max 5 minutes)');
+    if (duration > 300) {
+      // 5 minutes max
+      throw new Error("Audio duration too long (max 5 minutes)");
     }
-    
+
     return {
       valid: true,
       duration: duration,
-      size: stats.size
+      size: stats.size,
     };
   } catch (error) {
     return {
       valid: false,
-      error: error.message
+      error: error.message,
     };
   }
 }
 
 // Convert audio to format compatible with Whisper (if needed)
 async function prepareAudioForWhisper(inputPath) {
-  const outputPath = inputPath + '.wav';
-  
+  const outputPath = inputPath + ".wav";
+
   try {
     // Convert to WAV, 16kHz, mono (optimal for Whisper)
     await execPromise(
-      `ffmpeg -i "${inputPath}" -ar 16000 -ac 1 -f wav "${outputPath}"`
+      `ffmpeg -i "${inputPath}" -ar 16000 -ac 1 -f wav "${outputPath}"`,
     );
-    
+
     // Clean up original if converted
     if (inputPath !== outputPath) {
       fs.unlinkSync(inputPath);
     }
-    
+
     return outputPath;
   } catch (error) {
     throw new Error(`Audio conversion failed: ${error.message}`);
@@ -492,94 +511,102 @@ async function prepareAudioForWhisper(inputPath) {
 ### 7. Error Handling Module (Complete)
 
 **Complete Implementation**:
+
 ```javascript
-const logger = require('./logger');
+const logger = require("./logger");
 
 // Retry with exponential backoff
 async function retryWithBackoff(operation, maxRetries = 2) {
   let lastError;
-  
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await operation();
     } catch (error) {
       lastError = error;
-      
+
       // Don't retry on certain errors
-      if (error.status === 400 || error.status === 401 || error.status === 403) {
+      if (
+        error.status === 400 ||
+        error.status === 401 ||
+        error.status === 403
+      ) {
         throw error;
       }
-      
+
       if (attempt < maxRetries) {
         const delay = Math.pow(2, attempt) * 1000; // 1s, 2s
-        logger.warn(`Retry attempt ${attempt + 1} after ${delay}ms`, { error: error.message });
-        await new Promise(resolve => setTimeout(resolve, delay));
+        logger.warn(`Retry attempt ${attempt + 1} after ${delay}ms`, {
+          error: error.message,
+        });
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
-  
+
   throw lastError;
 }
 
 // Error handler middleware
 function errorHandler(error, req, res, next) {
-  logger.error('API Error', {
+  logger.error("API Error", {
     error: error.message,
     stack: error.stack,
     path: req.path,
-    method: req.method
+    method: req.method,
   });
-  
+
   // OpenAI API errors
   if (error.response) {
     const status = error.response.status;
     const errorData = error.response.data;
-    
+
     if (status === 429) {
       return res.status(429).json({
-        error: 'RATE_LIMIT_EXCEEDED',
-        message: 'OpenAI API rate limit exceeded. Please try again later.',
-        retryAfter: error.response.headers['retry-after']
+        error: "RATE_LIMIT_EXCEEDED",
+        message: "OpenAI API rate limit exceeded. Please try again later.",
+        retryAfter: error.response.headers["retry-after"],
       });
     }
-    
+
     if (status === 401) {
       return res.status(401).json({
-        error: 'INVALID_API_KEY',
-        message: 'Invalid OpenAI API key'
+        error: "INVALID_API_KEY",
+        message: "Invalid OpenAI API key",
       });
     }
-    
+
     if (status === 400) {
       return res.status(400).json({
-        error: 'INVALID_REQUEST',
-        message: errorData.error?.message || 'Invalid request to OpenAI API'
+        error: "INVALID_REQUEST",
+        message: errorData.error?.message || "Invalid request to OpenAI API",
       });
     }
   }
-  
+
   // Validation errors
-  if (error.name === 'ValidationError' || error.message.includes('Invalid')) {
+  if (error.name === "ValidationError" || error.message.includes("Invalid")) {
     return res.status(400).json({
-      error: 'VALIDATION_ERROR',
-      message: error.message
+      error: "VALIDATION_ERROR",
+      message: error.message,
     });
   }
-  
+
   // Database errors
-  if (error.code && error.code.startsWith('23')) {
+  if (error.code && error.code.startsWith("23")) {
     return res.status(400).json({
-      error: 'DATABASE_ERROR',
-      message: 'Database constraint violation'
+      error: "DATABASE_ERROR",
+      message: "Database constraint violation",
     });
   }
-  
+
   // Default error
   res.status(500).json({
-    error: 'INTERNAL_SERVER_ERROR',
-    message: process.env.NODE_ENV === 'development' 
-      ? error.message 
-      : 'An internal server error occurred'
+    error: "INTERNAL_SERVER_ERROR",
+    message:
+      process.env.NODE_ENV === "development"
+        ? error.message
+        : "An internal server error occurred",
   });
 }
 ```
@@ -589,42 +616,43 @@ function errorHandler(error, req, res, next) {
 ### 8. Logging Module (Complete)
 
 **Complete Implementation**:
+
 ```javascript
-const winston = require('winston');
-const path = require('path');
-const fs = require('fs');
+const winston = require("winston");
+const path = require("path");
+const fs = require("fs");
 
 // Ensure logs directory exists
-const logsDir = path.join(process.cwd(), 'logs');
+const logsDir = path.join(process.cwd(), "logs");
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
 
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || "info",
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.errors({ stack: true }),
-    winston.format.json()
+    winston.format.json(),
   ),
   transports: [
     // Write all logs to console
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
-        winston.format.simple()
-      )
+        winston.format.simple(),
+      ),
     }),
     // Write errors to error.log
     new winston.transports.File({
-      filename: path.join(logsDir, 'error.log'),
-      level: 'error'
+      filename: path.join(logsDir, "error.log"),
+      level: "error",
     }),
     // Write all logs to combined.log
     new winston.transports.File({
-      filename: path.join(logsDir, 'combined.log')
-    })
-  ]
+      filename: path.join(logsDir, "combined.log"),
+    }),
+  ],
 });
 
 module.exports = logger;
@@ -741,13 +769,15 @@ Request → Get Session → Not Found → Create New Session → Continue
 ### Complete MVP Stack
 
 #### Core Services
+
 - **STT**: OpenAI Whisper API (`whisper-1`)
 - **TTS**: OpenAI TTS API (`tts-1`, voice: `alloy`)
 - **LLM**: OpenAI GPT-3.5-turbo
 
 #### Backend (Node.js)
-- **Framework**: Express.js
-- **Language**: JavaScript/TypeScript
+
+- **Framework**: NextJS
+- **Language**: TypeScript
 - **Dependencies**:
   - `express` - Web framework
   - `openai` - OpenAI SDK
@@ -759,14 +789,17 @@ Request → Get Session → Not Found → Create New Session → Continue
   - `crypto` - API key hashing
 
 #### Database
+
 - **PostgreSQL** 15+
 - **Connection Pooling**: pg.Pool
 
 #### Audio Processing
+
 - **FFmpeg** - Audio conversion and validation
 - **FFprobe** - Audio metadata extraction
 
 #### Deployment
+
 - **Docker** + **docker-compose**
 - **Node.js** 18+
 
@@ -777,16 +810,18 @@ Request → Get Session → Not Found → Create New Session → Continue
 ### All MVP Endpoints
 
 #### 1. Health Check
+
 ```
 GET /api/v1/health
 Response: { status: "ok", timestamp: "ISO8601" }
 ```
 
 #### 2. User Registration (Create API Key)
+
 ```
 POST /api/v1/users/register
 Body: { email: "string" }
-Response: { 
+Response: {
   userId: "uuid",
   apiKey: "sk_...",  // Return only once
   message: "Save this API key securely"
@@ -794,10 +829,11 @@ Response: {
 ```
 
 #### 3. Authentication (Login)
+
 ```
 POST /api/v1/auth/login
 Body: { apiKey: "string" }
-Response: { 
+Response: {
   token: "api-key",  // Same as apiKey for MVP
   userId: "uuid",
   email: "string"
@@ -805,20 +841,22 @@ Response: {
 ```
 
 #### 4. Create Session
+
 ```
 POST /api/v1/sessions
 Headers: { Authorization: "Bearer <api-key>" }
-Response: { 
+Response: {
   sessionId: "uuid",
   createdAt: "ISO8601"
 }
 ```
 
 #### 5. Get Session
+
 ```
 GET /api/v1/sessions/:sessionId
 Headers: { Authorization: "Bearer <api-key>" }
-Response: { 
+Response: {
   session: {
     id: "uuid",
     userId: "uuid",
@@ -829,9 +867,10 @@ Response: {
 ```
 
 #### 6. Voice Conversation (Main Endpoint)
+
 ```
 POST /api/v1/voice/conversation
-Headers: { 
+Headers: {
   Authorization: "Bearer <api-key>",
   Content-Type: "multipart/form-data"
 }
@@ -839,10 +878,10 @@ Body: FormData {
   audio: File (required),
   sessionId: string (optional - will create if not provided)
 }
-Response: 
+Response:
   Content-Type: audio/mpeg
   Body: <audio buffer>
-  
+
   OR (if error):
   Content-Type: application/json
   Body: {
@@ -852,6 +891,7 @@ Response:
 ```
 
 #### 7. Get Conversation History
+
 ```
 GET /api/v1/sessions/:sessionId/messages
 Headers: { Authorization: "Bearer <api-key>" }
@@ -868,7 +908,7 @@ Response: {
 
 ## Database Schema
 
-### Complete Schema with Indexes
+### Complete Schema with Indexes.
 
 ```sql
 -- Enable UUID extension
@@ -893,7 +933,7 @@ CREATE TABLE sessions (
   created_at TIMESTAMP DEFAULT NOW(),
   last_activity_at TIMESTAMP DEFAULT NOW(),
   metadata JSONB DEFAULT '{}',
-  
+
   CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(id)
 );
 
@@ -909,7 +949,7 @@ CREATE TABLE messages (
   content TEXT NOT NULL,
   audio_url VARCHAR(500),
   created_at TIMESTAMP DEFAULT NOW(),
-  
+
   CONSTRAINT fk_session FOREIGN KEY(session_id) REFERENCES sessions(id)
 );
 
@@ -921,8 +961,8 @@ CREATE INDEX idx_messages_session_created ON messages(session_id, created_at);
 CREATE OR REPLACE FUNCTION update_session_activity()
 RETURNS TRIGGER AS $$
 BEGIN
-  UPDATE sessions 
-  SET last_activity_at = NOW() 
+  UPDATE sessions
+  SET last_activity_at = NOW()
   WHERE id = NEW.session_id;
   RETURN NEW;
 END;
@@ -960,6 +1000,7 @@ mkdir -p migrations
 ### Step 2: Environment Configuration
 
 **.env**:
+
 ```env
 # OpenAI API
 OPENAI_API_KEY=sk-your-openai-api-key
@@ -983,11 +1024,13 @@ SESSION_TIMEOUT_MINUTES=30
 ### Step 3: Database Setup
 
 **migrations/001_initial_schema.sql**:
+
 ```sql
 -- Run the complete schema from Database Schema section above
 ```
 
 **Setup script**:
+
 ```bash
 # Create database
 createdb voice_agent
@@ -999,47 +1042,50 @@ psql -d voice_agent -f migrations/001_initial_schema.sql
 ### Step 4: Complete Server Implementation
 
 **src/server.js**:
+
 ```javascript
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const multer = require('multer');
-const { authenticate } = require('./middleware/auth');
-const { errorHandler } = require('./middleware/errorHandler');
-const logger = require('./utils/logger');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const multer = require("multer");
+const { authenticate } = require("./middleware/auth");
+const { errorHandler } = require("./middleware/errorHandler");
+const logger = require("./utils/logger");
 
 // Import routes
-const healthRoutes = require('./routes/health');
-const authRoutes = require('./routes/auth');
-const sessionRoutes = require('./routes/sessions');
-const voiceRoutes = require('./routes/voice');
+const healthRoutes = require("./routes/health");
+const authRoutes = require("./routes/auth");
+const sessionRoutes = require("./routes/sessions");
+const voiceRoutes = require("./routes/voice");
 
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "*",
+    credentials: true,
+  }),
+);
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Request logging
 app.use((req, res, next) => {
-  logger.info('Request', {
+  logger.info("Request", {
     method: req.method,
     path: req.path,
-    ip: req.ip
+    ip: req.ip,
   });
   next();
 });
 
 // Routes
-app.use('/api/v1/health', healthRoutes);
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/sessions', authenticate, sessionRoutes);
-app.use('/api/v1/voice', authenticate, voiceRoutes);
+app.use("/api/v1/health", healthRoutes);
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/sessions", authenticate, sessionRoutes);
+app.use("/api/v1/voice", authenticate, voiceRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);
@@ -1056,15 +1102,16 @@ module.exports = app;
 ### Step 5: Complete Route Implementations
 
 **src/routes/health.js**:
+
 ```javascript
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
-router.get('/', (req, res) => {
+router.get("/", (req, res) => {
   res.json({
-    status: 'ok',
+    status: "ok",
     timestamp: new Date().toISOString(),
-    service: 'voice-agent-api'
+    service: "voice-agent-api",
   });
 });
 
@@ -1072,33 +1119,35 @@ module.exports = router;
 ```
 
 **src/routes/auth.js**:
+
 ```javascript
-const express = require('express');
-const { validateApiKey, createUser } = require('../modules/auth');
-const logger = require('../utils/logger');
+const express = require("express");
+const { validateApiKey, createUser } = require("../modules/auth");
+const logger = require("../utils/logger");
 
 const router = express.Router();
 
 // Register new user
-router.post('/register', async (req, res, next) => {
+router.post("/register", async (req, res, next) => {
   try {
     const { email } = req.body;
-    
+
     if (!email) {
       return res.status(400).json({
-        error: 'VALIDATION_ERROR',
-        message: 'Email is required'
+        error: "VALIDATION_ERROR",
+        message: "Email is required",
       });
     }
-    
+
     const { userId, apiKey } = await createUser(email);
-    
-    logger.info('User registered', { userId, email });
-    
+
+    logger.info("User registered", { userId, email });
+
     res.status(201).json({
       userId,
       apiKey,
-      message: 'API key created. Save this key securely - it will not be shown again.'
+      message:
+        "API key created. Save this key securely - it will not be shown again.",
     });
   } catch (error) {
     next(error);
@@ -1106,30 +1155,30 @@ router.post('/register', async (req, res, next) => {
 });
 
 // Login with API key
-router.post('/login', async (req, res, next) => {
+router.post("/login", async (req, res, next) => {
   try {
     const { apiKey } = req.body;
-    
+
     if (!apiKey) {
       return res.status(400).json({
-        error: 'VALIDATION_ERROR',
-        message: 'API key is required'
+        error: "VALIDATION_ERROR",
+        message: "API key is required",
       });
     }
-    
+
     const user = await validateApiKey(apiKey);
-    
+
     if (!user) {
       return res.status(401).json({
-        error: 'INVALID_API_KEY',
-        message: 'Invalid API key'
+        error: "INVALID_API_KEY",
+        message: "Invalid API key",
       });
     }
-    
+
     res.json({
       token: apiKey, // For MVP, token is same as API key
       userId: user.id,
-      email: user.email
+      email: user.email,
     });
   } catch (error) {
     next(error);
@@ -1140,25 +1189,26 @@ module.exports = router;
 ```
 
 **src/routes/sessions.js**:
+
 ```javascript
-const express = require('express');
-const { createSession, getSession } = require('../modules/session');
-const { getConversationHistory } = require('../modules/conversation');
-const logger = require('../utils/logger');
+const express = require("express");
+const { createSession, getSession } = require("../modules/session");
+const { getConversationHistory } = require("../modules/conversation");
+const logger = require("../utils/logger");
 
 const router = express.Router();
 
 // Create session
-router.post('/', async (req, res, next) => {
+router.post("/", async (req, res, next) => {
   try {
     const userId = req.user.id;
     const sessionId = await createSession(userId);
-    
-    logger.info('Session created', { sessionId, userId });
-    
+
+    logger.info("Session created", { sessionId, userId });
+
     res.status(201).json({
       sessionId,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     });
   } catch (error) {
     next(error);
@@ -1166,20 +1216,20 @@ router.post('/', async (req, res, next) => {
 });
 
 // Get session
-router.get('/:sessionId', async (req, res, next) => {
+router.get("/:sessionId", async (req, res, next) => {
   try {
     const { sessionId } = req.params;
     const userId = req.user.id;
-    
+
     const session = await getSession(sessionId, userId);
-    
+
     if (!session) {
       return res.status(404).json({
-        error: 'SESSION_NOT_FOUND',
-        message: 'Session not found'
+        error: "SESSION_NOT_FOUND",
+        message: "Session not found",
       });
     }
-    
+
     res.json({ session });
   } catch (error) {
     next(error);
@@ -1187,23 +1237,23 @@ router.get('/:sessionId', async (req, res, next) => {
 });
 
 // Get conversation history
-router.get('/:sessionId/messages', async (req, res, next) => {
+router.get("/:sessionId/messages", async (req, res, next) => {
   try {
     const { sessionId } = req.params;
     const userId = req.user.id;
     const limit = parseInt(req.query.limit) || 20;
-    
+
     // Verify session belongs to user
     const session = await getSession(sessionId, userId);
     if (!session) {
       return res.status(404).json({
-        error: 'SESSION_NOT_FOUND',
-        message: 'Session not found'
+        error: "SESSION_NOT_FOUND",
+        message: "Session not found",
       });
     }
-    
+
     const messages = await getConversationHistory(sessionId, limit);
-    
+
     res.json({ messages });
   } catch (error) {
     next(error);
@@ -1214,90 +1264,93 @@ module.exports = router;
 ```
 
 **src/routes/voice.js**:
+
 ```javascript
-const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const { handleVoiceConversation } = require('../modules/voice');
-const { getOrCreateSession } = require('../modules/session');
-const { validateAudio, prepareAudioForWhisper } = require('../modules/audio');
-const logger = require('../utils/logger');
+const express = require("express");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+const { handleVoiceConversation } = require("../modules/voice");
+const { getOrCreateSession } = require("../modules/session");
+const { validateAudio, prepareAudioForWhisper } = require("../modules/audio");
+const logger = require("../utils/logger");
 
 const router = express.Router();
 
 // Configure multer
 const upload = multer({
-  dest: 'uploads/',
+  dest: "uploads/",
   limits: {
     fileSize: 25 * 1024 * 1024, // 25MB
   },
   fileFilter: (req, file, cb) => {
     const allowedMimes = [
-      'audio/wav',
-      'audio/mpeg',
-      'audio/mp3',
-      'audio/webm',
-      'audio/ogg',
-      'audio/flac',
-      'audio/x-wav',
-      'audio/wave'
+      "audio/wav",
+      "audio/mpeg",
+      "audio/mp3",
+      "audio/webm",
+      "audio/ogg",
+      "audio/flac",
+      "audio/x-wav",
+      "audio/wave",
     ];
-    
+
     if (allowedMimes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid audio format. Supported: WAV, MP3, WebM, OGG, FLAC'));
+      cb(
+        new Error("Invalid audio format. Supported: WAV, MP3, WebM, OGG, FLAC"),
+      );
     }
-  }
+  },
 });
 
 // Voice conversation endpoint
-router.post('/conversation', upload.single('audio'), async (req, res, next) => {
+router.post("/conversation", upload.single("audio"), async (req, res, next) => {
   let audioFilePath = null;
-  
+
   try {
     // Validate file uploaded
     if (!req.file) {
       return res.status(400).json({
-        error: 'VALIDATION_ERROR',
-        message: 'Audio file is required'
+        error: "VALIDATION_ERROR",
+        message: "Audio file is required",
       });
     }
-    
+
     audioFilePath = req.file.path;
     const userId = req.user.id;
     const sessionId = req.body.sessionId || null;
-    
-    logger.info('Voice conversation request', {
+
+    logger.info("Voice conversation request", {
       userId,
       sessionId,
       fileSize: req.file.size,
-      mimetype: req.file.mimetype
+      mimetype: req.file.mimetype,
     });
-    
+
     // Validate audio
     const validation = await validateAudio(audioFilePath);
     if (!validation.valid) {
       return res.status(400).json({
-        error: 'VALIDATION_ERROR',
-        message: validation.error
+        error: "VALIDATION_ERROR",
+        message: validation.error,
       });
     }
-    
+
     // Get or create session
     const activeSessionId = await getOrCreateSession(userId, sessionId);
-    
+
     // Prepare audio for Whisper
     const preparedAudioPath = await prepareAudioForWhisper(audioFilePath);
-    
+
     // Process voice conversation
     const result = await handleVoiceConversation({
       userId,
       sessionId: activeSessionId,
-      audioFilePath: preparedAudioPath
+      audioFilePath: preparedAudioPath,
     });
-    
+
     // Cleanup temporary files
     if (fs.existsSync(preparedAudioPath)) {
       fs.unlinkSync(preparedAudioPath);
@@ -1305,20 +1358,19 @@ router.post('/conversation', upload.single('audio'), async (req, res, next) => {
     if (fs.existsSync(audioFilePath) && audioFilePath !== preparedAudioPath) {
       fs.unlinkSync(audioFilePath);
     }
-    
+
     // Return audio response
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('X-Session-Id', activeSessionId);
-    res.setHeader('X-Transcript', result.transcript);
+    res.setHeader("Content-Type", "audio/mpeg");
+    res.setHeader("X-Session-Id", activeSessionId);
+    res.setHeader("X-Transcript", result.transcript);
     res.send(result.audio);
-    
-    logger.info('Voice conversation completed', {
+
+    logger.info("Voice conversation completed", {
       userId,
       sessionId: activeSessionId,
       transcriptLength: result.transcript.length,
-      responseLength: result.response.length
+      responseLength: result.response.length,
     });
-    
   } catch (error) {
     // Cleanup on error
     if (audioFilePath && fs.existsSync(audioFilePath)) {
@@ -1334,64 +1386,68 @@ module.exports = router;
 ### Step 6: Complete Module Implementations
 
 **src/modules/voice.js**:
+
 ```javascript
-const { transcribeAudio } = require('./stt');
-const { synthesizeSpeech } = require('./tts');
-const { generateResponse } = require('./llm');
-const { getConversationHistory, saveMessage } = require('./conversation');
-const { retryWithBackoff } = require('./errorHandler');
-const logger = require('../utils/logger');
+const { transcribeAudio } = require("./stt");
+const { synthesizeSpeech } = require("./tts");
+const { generateResponse } = require("./llm");
+const { getConversationHistory, saveMessage } = require("./conversation");
+const { retryWithBackoff } = require("./errorHandler");
+const logger = require("../utils/logger");
 
 async function handleVoiceConversation({ userId, sessionId, audioFilePath }) {
   try {
     // 1. Transcribe audio (with retry)
-    logger.info('Transcribing audio', { sessionId });
+    logger.info("Transcribing audio", { sessionId });
     const transcript = await retryWithBackoff(
       () => transcribeAudio(audioFilePath),
-      2
+      2,
     );
-    
+
     if (!transcript || transcript.trim().length === 0) {
-      throw new Error('No speech detected in audio');
+      throw new Error("No speech detected in audio");
     }
-    
-    logger.info('Transcription complete', { sessionId, transcript });
-    
+
+    logger.info("Transcription complete", { sessionId, transcript });
+
     // 2. Get conversation history
     const history = await getConversationHistory(sessionId, 20);
-    
+
     // 3. Generate response (with retry)
-    logger.info('Generating response', { sessionId });
+    logger.info("Generating response", { sessionId });
     const responseText = await retryWithBackoff(
       () => generateResponse(transcript, history),
-      2
+      2,
     );
-    
-    logger.info('Response generated', { sessionId, responseLength: responseText.length });
-    
+
+    logger.info("Response generated", {
+      sessionId,
+      responseLength: responseText.length,
+    });
+
     // 4. Synthesize speech (with retry)
-    logger.info('Synthesizing speech', { sessionId });
+    logger.info("Synthesizing speech", { sessionId });
     const audio = await retryWithBackoff(
       () => synthesizeSpeech(responseText),
-      2
+      2,
     );
-    
-    logger.info('Speech synthesized', { sessionId, audioSize: audio.length });
-    
+
+    logger.info("Speech synthesized", { sessionId, audioSize: audio.length });
+
     // 5. Save messages to database
-    await saveMessage(sessionId, 'user', transcript);
-    await saveMessage(sessionId, 'assistant', responseText);
-    
+    await saveMessage(sessionId, "user", transcript);
+    await saveMessage(sessionId, "assistant", responseText);
+
     return {
       audio,
       transcript,
-      response: responseText
+      response: responseText,
     };
   } catch (error) {
-    logger.error('Voice conversation error', {
+    logger.error("Voice conversation error", {
       sessionId,
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
     });
     throw error;
   }
@@ -1401,27 +1457,28 @@ module.exports = { handleVoiceConversation };
 ```
 
 **src/modules/stt.js**:
+
 ```javascript
-const { OpenAI } = require('openai');
-const fs = require('fs');
-const logger = require('../utils/logger');
+const { OpenAI } = require("openai");
+const fs = require("fs");
+const logger = require("../utils/logger");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function transcribeAudio(audioFilePath) {
   try {
     const file = fs.createReadStream(audioFilePath);
-    
+
     const transcript = await openai.audio.transcriptions.create({
       file: file,
       model: "whisper-1",
       language: null, // Auto-detect
-      response_format: "json"
+      response_format: "json",
     });
-    
+
     return transcript.text;
   } catch (error) {
-    logger.error('STT error', { error: error.message });
+    logger.error("STT error", { error: error.message });
     throw new Error(`STT failed: ${error.message}`);
   }
 }
@@ -1430,32 +1487,35 @@ module.exports = { transcribeAudio };
 ```
 
 **src/modules/tts.js**:
+
 ```javascript
-const { OpenAI } = require('openai');
-const logger = require('../utils/logger');
+const { OpenAI } = require("openai");
+const logger = require("../utils/logger");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function synthesizeSpeech(text) {
   try {
     if (!text || text.trim().length === 0) {
-      throw new Error('Text is required for TTS');
+      throw new Error("Text is required for TTS");
     }
-    
+
     if (text.length > 4096) {
-      throw new Error(`Text exceeds 4096 character limit (${text.length} chars)`);
+      throw new Error(
+        `Text exceeds 4096 character limit (${text.length} chars)`,
+      );
     }
-    
+
     const response = await openai.audio.speech.create({
       model: "tts-1",
       voice: "alloy",
-      input: text
+      input: text,
     });
-    
+
     const buffer = Buffer.from(await response.arrayBuffer());
     return buffer;
   } catch (error) {
-    logger.error('TTS error', { error: error.message });
+    logger.error("TTS error", { error: error.message });
     throw new Error(`TTS failed: ${error.message}`);
   }
 }
@@ -1464,9 +1524,10 @@ module.exports = { synthesizeSpeech };
 ```
 
 **src/modules/llm.js**:
+
 ```javascript
-const { OpenAI } = require('openai');
-const logger = require('../utils/logger');
+const { OpenAI } = require("openai");
+const logger = require("../utils/logger");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -1474,29 +1535,30 @@ async function generateResponse(userText, conversationHistory) {
   try {
     const messages = [
       {
-        role: 'system',
-        content: 'You are a helpful voice assistant. Keep responses concise and natural for voice conversation. Maximum 2-3 sentences.'
-      }
+        role: "system",
+        content:
+          "You are a helpful voice assistant. Keep responses concise and natural for voice conversation. Maximum 2-3 sentences.",
+      },
     ];
-    
+
     // Add conversation history (last 10 messages)
     const recentHistory = conversationHistory.slice(-10);
     messages.push(...recentHistory);
-    
+
     // Add current user message
-    messages.push({ role: 'user', content: userText });
-    
+    messages.push({ role: "user", content: userText });
+
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: messages,
       max_tokens: 500,
-      temperature: 0.7
+      temperature: 0.7,
     });
-    
+
     const responseText = response.choices[0].message.content;
     return responseText;
   } catch (error) {
-    logger.error('LLM error', { error: error.message });
+    logger.error("LLM error", { error: error.message });
     throw new Error(`LLM failed: ${error.message}`);
   }
 }
@@ -1505,9 +1567,10 @@ module.exports = { generateResponse };
 ```
 
 **src/modules/conversation.js**:
+
 ```javascript
-const { Pool } = require('pg');
-const logger = require('../utils/logger');
+const { Pool } = require("pg");
+const logger = require("../utils/logger");
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -1524,15 +1587,15 @@ async function getConversationHistory(sessionId, limit = 20) {
        WHERE session_id = $1 
        ORDER BY created_at ASC 
        LIMIT $2`,
-      [sessionId, limit]
+      [sessionId, limit],
     );
-    
-    return result.rows.map(row => ({
+
+    return result.rows.map((row) => ({
       role: row.role,
-      content: row.content
+      content: row.content,
     }));
   } catch (error) {
-    logger.error('Get conversation history error', { error: error.message });
+    logger.error("Get conversation history error", { error: error.message });
     throw error;
   }
 }
@@ -1540,39 +1603,40 @@ async function getConversationHistory(sessionId, limit = 20) {
 async function saveMessage(sessionId, role, content) {
   try {
     await pool.query(
-      'INSERT INTO messages (session_id, role, content) VALUES ($1, $2, $3)',
-      [sessionId, role, content]
+      "INSERT INTO messages (session_id, role, content) VALUES ($1, $2, $3)",
+      [sessionId, role, content],
     );
   } catch (error) {
-    logger.error('Save message error', { error: error.message });
+    logger.error("Save message error", { error: error.message });
     throw error;
   }
 }
 
 module.exports = {
   getConversationHistory,
-  saveMessage
+  saveMessage,
 };
 ```
 
 **src/modules/session.js**:
+
 ```javascript
-const { Pool } = require('pg');
-const logger = require('../utils/logger');
+const { Pool } = require("pg");
+const logger = require("../utils/logger");
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
 });
 
 async function createSession(userId) {
   try {
     const result = await pool.query(
-      'INSERT INTO sessions (user_id) VALUES ($1) RETURNING id',
-      [userId]
+      "INSERT INTO sessions (user_id) VALUES ($1) RETURNING id",
+      [userId],
     );
     return result.rows[0].id;
   } catch (error) {
-    logger.error('Create session error', { error: error.message });
+    logger.error("Create session error", { error: error.message });
     throw error;
   }
 }
@@ -1580,12 +1644,12 @@ async function createSession(userId) {
 async function getSession(sessionId, userId) {
   try {
     const result = await pool.query(
-      'SELECT * FROM sessions WHERE id = $1 AND user_id = $2',
-      [sessionId, userId]
+      "SELECT * FROM sessions WHERE id = $1 AND user_id = $2",
+      [sessionId, userId],
     );
     return result.rows[0] || null;
   } catch (error) {
-    logger.error('Get session error', { error: error.message });
+    logger.error("Get session error", { error: error.message });
     throw error;
   }
 }
@@ -1597,8 +1661,8 @@ async function getOrCreateSession(userId, sessionId = null) {
       if (session) {
         // Update last activity
         await pool.query(
-          'UPDATE sessions SET last_activity_at = NOW() WHERE id = $1',
-          [sessionId]
+          "UPDATE sessions SET last_activity_at = NOW() WHERE id = $1",
+          [sessionId],
         );
         return sessionId;
       }
@@ -1606,7 +1670,7 @@ async function getOrCreateSession(userId, sessionId = null) {
     // Create new session
     return await createSession(userId);
   } catch (error) {
-    logger.error('Get or create session error', { error: error.message });
+    logger.error("Get or create session error", { error: error.message });
     throw error;
   }
 }
@@ -1614,46 +1678,47 @@ async function getOrCreateSession(userId, sessionId = null) {
 module.exports = {
   createSession,
   getSession,
-  getOrCreateSession
+  getOrCreateSession,
 };
 ```
 
 **src/modules/auth.js**:
+
 ```javascript
-const crypto = require('crypto');
-const { Pool } = require('pg');
-const logger = require('../utils/logger');
+const crypto = require("crypto");
+const { Pool } = require("pg");
+const logger = require("../utils/logger");
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
 });
 
 function hashApiKey(apiKey) {
-  return crypto.createHash('sha256').update(apiKey).digest('hex');
+  return crypto.createHash("sha256").update(apiKey).digest("hex");
 }
 
 function generateApiKey() {
-  return 'sk_' + crypto.randomBytes(32).toString('hex');
+  return "sk_" + crypto.randomBytes(32).toString("hex");
 }
 
 async function validateApiKey(apiKey) {
   try {
     const hashedKey = hashApiKey(apiKey);
     const result = await pool.query(
-      'SELECT id, email FROM users WHERE api_key_hash = $1',
-      [hashedKey]
+      "SELECT id, email FROM users WHERE api_key_hash = $1",
+      [hashedKey],
     );
-    
+
     if (result.rows.length === 0) {
       return null;
     }
-    
+
     return {
       id: result.rows[0].id,
-      email: result.rows[0].email
+      email: result.rows[0].email,
     };
   } catch (error) {
-    logger.error('Validate API key error', { error: error.message });
+    logger.error("Validate API key error", { error: error.message });
     throw error;
   }
 }
@@ -1662,21 +1727,22 @@ async function createUser(email) {
   try {
     const apiKey = generateApiKey();
     const hashedKey = hashApiKey(apiKey);
-    
+
     const result = await pool.query(
-      'INSERT INTO users (email, api_key_hash) VALUES ($1, $2) RETURNING id',
-      [email, hashedKey]
+      "INSERT INTO users (email, api_key_hash) VALUES ($1, $2) RETURNING id",
+      [email, hashedKey],
     );
-    
+
     return {
       userId: result.rows[0].id,
-      apiKey: apiKey
+      apiKey: apiKey,
     };
   } catch (error) {
-    if (error.code === '23505') { // Unique violation
-      throw new Error('Email already registered');
+    if (error.code === "23505") {
+      // Unique violation
+      throw new Error("Email already registered");
     }
-    logger.error('Create user error', { error: error.message });
+    logger.error("Create user error", { error: error.message });
     throw error;
   }
 }
@@ -1684,43 +1750,45 @@ async function createUser(email) {
 module.exports = {
   validateApiKey,
   createUser,
-  hashApiKey
+  hashApiKey,
 };
 ```
 
 **src/middleware/auth.js**:
+
 ```javascript
-const { validateApiKey } = require('../modules/auth');
-const logger = require('../utils/logger');
+const { validateApiKey } = require("../modules/auth");
+const logger = require("../utils/logger");
 
 async function authenticate(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
-        error: 'UNAUTHORIZED',
-        message: 'Missing or invalid authorization header. Use: Authorization: Bearer <api-key>'
+        error: "UNAUTHORIZED",
+        message:
+          "Missing or invalid authorization header. Use: Authorization: Bearer <api-key>",
       });
     }
-    
+
     const apiKey = authHeader.substring(7);
     const user = await validateApiKey(apiKey);
-    
+
     if (!user) {
       return res.status(401).json({
-        error: 'INVALID_API_KEY',
-        message: 'Invalid API key'
+        error: "INVALID_API_KEY",
+        message: "Invalid API key",
       });
     }
-    
+
     req.user = user;
     next();
   } catch (error) {
-    logger.error('Authentication error', { error: error.message });
+    logger.error("Authentication error", { error: error.message });
     res.status(500).json({
-      error: 'AUTHENTICATION_ERROR',
-      message: 'Authentication failed'
+      error: "AUTHENTICATION_ERROR",
+      message: "Authentication failed",
     });
   }
 }
@@ -1729,91 +1797,97 @@ module.exports = { authenticate };
 ```
 
 **src/middleware/errorHandler.js**:
+
 ```javascript
-const logger = require('../utils/logger');
+const logger = require("../utils/logger");
 
 function errorHandler(error, req, res, next) {
-  logger.error('API Error', {
+  logger.error("API Error", {
     error: error.message,
     stack: error.stack,
     path: req.path,
-    method: req.method
+    method: req.method,
   });
-  
+
   // OpenAI API errors
   if (error.response) {
     const status = error.response.status;
-    
+
     if (status === 429) {
       return res.status(429).json({
-        error: 'RATE_LIMIT_EXCEEDED',
-        message: 'OpenAI API rate limit exceeded. Please try again later.',
-        retryAfter: error.response.headers['retry-after']
+        error: "RATE_LIMIT_EXCEEDED",
+        message: "OpenAI API rate limit exceeded. Please try again later.",
+        retryAfter: error.response.headers["retry-after"],
       });
     }
-    
+
     if (status === 401) {
       return res.status(401).json({
-        error: 'INVALID_OPENAI_KEY',
-        message: 'Invalid OpenAI API key configured'
+        error: "INVALID_OPENAI_KEY",
+        message: "Invalid OpenAI API key configured",
       });
     }
-    
+
     if (status === 400) {
       return res.status(400).json({
-        error: 'INVALID_REQUEST',
-        message: error.response.data?.error?.message || 'Invalid request to OpenAI API'
+        error: "INVALID_REQUEST",
+        message:
+          error.response.data?.error?.message ||
+          "Invalid request to OpenAI API",
       });
     }
   }
-  
+
   // Validation errors
-  if (error.message.includes('Invalid') || error.message.includes('required')) {
+  if (error.message.includes("Invalid") || error.message.includes("required")) {
     return res.status(400).json({
-      error: 'VALIDATION_ERROR',
-      message: error.message
+      error: "VALIDATION_ERROR",
+      message: error.message,
     });
   }
-  
+
   // Database errors
-  if (error.code && error.code.startsWith('23')) {
+  if (error.code && error.code.startsWith("23")) {
     return res.status(400).json({
-      error: 'DATABASE_ERROR',
-      message: 'Database constraint violation'
+      error: "DATABASE_ERROR",
+      message: "Database constraint violation",
     });
   }
-  
+
   // Default error
   res.status(500).json({
-    error: 'INTERNAL_SERVER_ERROR',
-    message: process.env.NODE_ENV === 'development' 
-      ? error.message 
-      : 'An internal server error occurred'
+    error: "INTERNAL_SERVER_ERROR",
+    message:
+      process.env.NODE_ENV === "development"
+        ? error.message
+        : "An internal server error occurred",
   });
 }
 
 async function retryWithBackoff(operation, maxRetries = 2) {
   let lastError;
-  
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await operation();
     } catch (error) {
       lastError = error;
-      
+
       // Don't retry on client errors
       if (error.response?.status && error.response.status < 500) {
         throw error;
       }
-      
+
       if (attempt < maxRetries) {
         const delay = Math.pow(2, attempt) * 1000;
-        logger.warn(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms`);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        logger.warn(
+          `Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
-  
+
   throw lastError;
 }
 
@@ -1821,126 +1895,128 @@ module.exports = { errorHandler, retryWithBackoff };
 ```
 
 **src/modules/audio.js**:
+
 ```javascript
-const fs = require('fs');
-const { exec } = require('child_process');
-const util = require('util');
-const logger = require('../utils/logger');
+const fs = require("fs");
+const { exec } = require("child_process");
+const util = require("util");
+const logger = require("../utils/logger");
 
 const execPromise = util.promisify(exec);
 
 async function validateAudio(filePath) {
   try {
     if (!fs.existsSync(filePath)) {
-      return { valid: false, error: 'Audio file not found' };
+      return { valid: false, error: "Audio file not found" };
     }
-    
+
     const stats = fs.statSync(filePath);
     const maxSize = (process.env.MAX_AUDIO_SIZE_MB || 25) * 1024 * 1024;
-    
+
     if (stats.size > maxSize) {
       return {
         valid: false,
-        error: `Audio file too large (${(stats.size / 1024 / 1024).toFixed(2)}MB). Maximum: ${process.env.MAX_AUDIO_SIZE_MB || 25}MB`
+        error: `Audio file too large (${(stats.size / 1024 / 1024).toFixed(2)}MB). Maximum: ${process.env.MAX_AUDIO_SIZE_MB || 25}MB`,
       };
     }
-    
+
     // Get duration using ffprobe
     try {
       const { stdout } = await execPromise(
-        `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`
+        `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`,
       );
-      
+
       const duration = parseFloat(stdout.trim());
       const maxDuration = process.env.MAX_AUDIO_DURATION_SECONDS || 300;
-      
+
       if (duration > maxDuration) {
         return {
           valid: false,
-          error: `Audio duration too long (${Math.round(duration)}s). Maximum: ${maxDuration}s`
+          error: `Audio duration too long (${Math.round(duration)}s). Maximum: ${maxDuration}s`,
         };
       }
-      
+
       return {
         valid: true,
         duration: duration,
-        size: stats.size
+        size: stats.size,
       };
     } catch (error) {
       // FFprobe failed - might be invalid audio file
       return {
         valid: false,
-        error: 'Invalid audio file or format not supported'
+        error: "Invalid audio file or format not supported",
       };
     }
   } catch (error) {
     return {
       valid: false,
-      error: error.message
+      error: error.message,
     };
   }
 }
 
 async function prepareAudioForWhisper(inputPath) {
-  const outputPath = inputPath + '.wav';
-  
+  const outputPath = inputPath + ".wav";
+
   try {
     // Convert to WAV, 16kHz, mono (optimal for Whisper)
     await execPromise(
-      `ffmpeg -i "${inputPath}" -ar 16000 -ac 1 -f wav "${outputPath}" -y`
+      `ffmpeg -i "${inputPath}" -ar 16000 -ac 1 -f wav "${outputPath}" -y`,
     );
-    
+
     // Clean up original if converted
     if (inputPath !== outputPath && fs.existsSync(inputPath)) {
       fs.unlinkSync(inputPath);
     }
-    
+
     return outputPath;
   } catch (error) {
-    logger.error('Audio conversion error', { error: error.message });
+    logger.error("Audio conversion error", { error: error.message });
     throw new Error(`Audio conversion failed: ${error.message}`);
   }
 }
 
 module.exports = {
   validateAudio,
-  prepareAudioForWhisper
+  prepareAudioForWhisper,
 };
 ```
 
 **src/utils/logger.js**:
-```javascript
-const winston = require('winston');
-const path = require('path');
-const fs = require('fs');
 
-const logsDir = path.join(process.cwd(), 'logs');
+```javascript
+const winston = require("winston");
+const path = require("path");
+const fs = require("fs");
+
+const logsDir = path.join(process.cwd(), "logs");
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
 
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || "info",
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.errors({ stack: true }),
-    winston.format.json()
+    winston.format.json(),
   ),
   transports: [
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
-        winston.format.simple()
-      )
+        winston.format.simple(),
+      ),
     }),
     new winston.transports.File({
-      filename: path.join(logsDir, 'error.log'),
-      level: 'error'
+      filename: path.join(logsDir, "error.log"),
+      level: "error",
     }),
     new winston.transports.File({
-      filename: path.join(logsDir, 'combined.log')
-    })
-  ]
+      filename: path.join(logsDir, "combined.log"),
+    }),
+  ],
 });
 
 module.exports = logger;
@@ -1949,6 +2025,7 @@ module.exports = logger;
 ### Step 7: Complete Package.json
 
 **package.json**:
+
 ```json
 {
   "name": "voice-agent-mvp",
@@ -1978,6 +2055,7 @@ module.exports = logger;
 ### Step 8: Complete Docker Setup
 
 **Dockerfile**:
+
 ```dockerfile
 FROM node:18-alpine
 
@@ -2006,8 +2084,9 @@ CMD ["node", "src/server.js"]
 ```
 
 **docker-compose.yml**:
+
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   api:
@@ -2025,7 +2104,7 @@ services:
     depends_on:
       - db
     restart: unless-stopped
-  
+
   db:
     image: postgres:15-alpine
     environment:
@@ -2050,6 +2129,7 @@ volumes:
 ### Complete Test Flow
 
 **1. Setup**:
+
 ```bash
 # Start services
 docker-compose up -d
@@ -2059,6 +2139,7 @@ sleep 5
 ```
 
 **2. Register User**:
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/auth/register \
   -H "Content-Type: application/json" \
@@ -2069,6 +2150,7 @@ curl -X POST http://localhost:3000/api/v1/auth/register \
 ```
 
 **3. Create Session**:
+
 ```bash
 API_KEY="sk_..." # From step 2
 
@@ -2079,6 +2161,7 @@ curl -X POST http://localhost:3000/api/v1/sessions \
 ```
 
 **4. Send Voice Conversation**:
+
 ```bash
 SESSION_ID="uuid" # From step 3
 
@@ -2092,6 +2175,7 @@ curl -X POST http://localhost:3000/api/v1/voice/conversation \
 ```
 
 **5. Verify Conversation History**:
+
 ```bash
 curl -X GET "http://localhost:3000/api/v1/sessions/$SESSION_ID/messages" \
   -H "Authorization: Bearer $API_KEY"
@@ -2102,6 +2186,7 @@ curl -X GET "http://localhost:3000/api/v1/sessions/$SESSION_ID/messages" \
 ### Verification Checklist
 
 **✅ End-to-End Flow Works**:
+
 - [ ] User registration creates API key
 - [ ] API key authentication works
 - [ ] Session creation works
@@ -2114,6 +2199,7 @@ curl -X GET "http://localhost:3000/api/v1/sessions/$SESSION_ID/messages" \
 - [ ] Conversation history is retrieved
 
 **✅ Error Handling Works**:
+
 - [ ] Invalid API key returns 401
 - [ ] Invalid audio format returns 400
 - [ ] Audio too large returns 400
@@ -2122,6 +2208,7 @@ curl -X GET "http://localhost:3000/api/v1/sessions/$SESSION_ID/messages" \
 - [ ] Database errors are handled
 
 **✅ All Components Connected**:
+
 - [ ] Database connection works
 - [ ] OpenAI APIs are called correctly
 - [ ] File uploads are processed
@@ -2211,6 +2298,7 @@ curl -X GET "http://localhost:3000/api/v1/sessions/$SESSION_ID/messages" \
 **This MVP architecture is COMPLETE and will work end-to-end.**
 
 **All critical components are included:**
+
 - ✅ Complete API implementation
 - ✅ Complete database schema
 - ✅ Complete module implementations
